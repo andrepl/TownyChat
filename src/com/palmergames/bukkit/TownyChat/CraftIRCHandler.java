@@ -10,6 +10,7 @@ import com.ensifera.animosity.craftirc.CommandEndPoint;
 import com.ensifera.animosity.craftirc.CraftIRC;
 import com.ensifera.animosity.craftirc.RelayedCommand;
 import com.ensifera.animosity.craftirc.RelayedMessage;
+import com.palmergames.bukkit.TownyChat.channels.Channel;
 import com.palmergames.bukkit.towny.Towny;
 
 /**
@@ -75,6 +76,17 @@ public class CraftIRCHandler extends BasePoint implements CommandEndPoint   {
 	}
 
 	@Override
+	public void messageIn(RelayedMessage msg) {
+		if (msg.getEvent().equals("chat")) {
+			for (Channel c: plugin.getChannelsHandler().getChannelsByCraftIRCTag(msg.getField("source"))) {
+					c.handleIRCChat(msg);
+			}
+		} else {
+			plugin.getLogger().info("Got non-chat message: " + msg);
+		}
+	}
+	
+	@Override
 	public void commandIn(RelayedCommand arg0) {
 
 		// TODO Auto-generated method stub
@@ -98,6 +110,7 @@ public class CraftIRCHandler extends BasePoint implements CommandEndPoint   {
 		}
 	}
 
+	
 	protected class BukkitEvents implements Listener {
 
 		@EventHandler(priority = EventPriority.NORMAL)

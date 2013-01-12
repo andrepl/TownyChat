@@ -2,7 +2,9 @@ package com.palmergames.bukkit.TownyChat.channels;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.bukkit.entity.Player;
@@ -38,7 +40,7 @@ public class ChannelsHolder {
 	
 	// Container for all channels
 	private Map<String,Channel> channels = new HashMap<String,Channel>();
-
+	private Map<String, Set<Channel>> channelsByCraftIRCTag = new HashMap<String, Set<Channel>>();
 	/**
 	 * @return the channels
 	 */
@@ -54,20 +56,36 @@ public class ChannelsHolder {
 	}
 	
 	public void addChannel(Channel chan) {
-		if (isChannel(chan.getName()))
+		if (isChannel(chan.getName())) {
 			channels.remove(chan);
-			
+			for (Entry<String, Set<Channel>> entry: channelsByCraftIRCTag.entrySet()) {
+				Iterator<Channel> it =entry.getValue().iterator(); 
+				while (it.hasNext()) {
+					if (it.next().getName().equals(chan.getName())) {
+						it.remove();
+					}
+				}
+			}
+		}
 		channels.put(chan.getName(), chan);
+		if (!channelsByCraftIRCTag.containsKey(chan.getCraftIRCTag())) {
+			channelsByCraftIRCTag.put(chan.getCraftIRCTag(), new HashSet<Channel>());
+		}
+		plugin.getLogger().info("Registering Channel: " + chan.getCraftIRCTag() + ", " + chan);
+		channelsByCraftIRCTag.get(chan.getCraftIRCTag()).add(chan);
 	}
 	
 	public boolean isChannel(String channelName) {
 		return channels.containsKey(channelName.toLowerCase());
 	}
 	
+	public Set<Channel> getChannelsByCraftIRCTag(String tag) {
+		return channelsByCraftIRCTag.get(tag);
+	}
+	
 	public Channel getChannel(String channelName) {
 		return channels.get(channelName.toLowerCase());
 	}
-	
 	/**
 	 * Get the relevant channel for this command
 	 * if the player is permitted to use it.

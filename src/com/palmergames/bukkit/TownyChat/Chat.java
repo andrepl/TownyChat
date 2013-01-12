@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.dynmap.DynmapAPI;
 
@@ -34,7 +35,7 @@ import com.palmergames.bukkit.towny.Towny;
  */
 
 public class Chat extends JavaPlugin {
-
+	private net.milkbowl.vault.chat.Chat vaultChat;
 	private TownyChatPlayerListener TownyPlayerListener;
 	private ChannelsHolder channels;
 	private ConfigurationHandler configuration;
@@ -50,7 +51,7 @@ public class Chat extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-
+		
 		pm = getServer().getPluginManager();
 		configuration = new ConfigurationHandler(this);
 		channels = new ChannelsHolder(this);
@@ -124,6 +125,14 @@ public class Chat extends JavaPlugin {
 		test = pm.getPlugin("Towny");
 		if (test != null && test instanceof Towny)
 			towny = (Towny) test;
+		
+		if (getServer().getPluginManager().getPlugin("Vault") != null) {
+	        RegisteredServiceProvider<net.milkbowl.vault.chat.Chat> rsp = getServer().getServicesManager().getRegistration(net.milkbowl.vault.chat.Chat.class);
+	        vaultChat = rsp.getProvider();
+        } else {
+        	vaultChat = null;
+        }
+		
 		/**
 		 * Hook craftIRC
 		 */
@@ -209,6 +218,9 @@ public class Chat extends JavaPlugin {
 		return towny;
 	}
 	
+	public net.milkbowl.vault.chat.Chat getVaultChat() {
+		return vaultChat;
+	}
 	public CraftIRCHandler getIRC() {
 		return irc;
 	}

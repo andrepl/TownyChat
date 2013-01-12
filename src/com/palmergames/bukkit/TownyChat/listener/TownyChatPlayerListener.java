@@ -198,7 +198,6 @@ public class TownyChatPlayerListener implements Listener  {
 				}
 			}
 			
-			// Find a global channel this player has permissions for.
 			Channel channel = plugin.getChannelsHandler().getActiveChannel(player, channelTypes.GLOBAL);
 					
 			if (channel != null) {

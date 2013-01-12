@@ -11,6 +11,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.dynmap.DynmapAPI;
 
 import com.earth2me.essentials.User;
+import com.ensifera.animosity.craftirc.RelayedMessage;
 import com.palmergames.bukkit.TownyChat.Chat;
 import com.palmergames.bukkit.TownyChat.CraftIRCHandler;
 import com.palmergames.bukkit.TownyChat.TownyChatFormatter;
@@ -76,7 +77,7 @@ public class StandardChannel extends Channel {
 				return;
 			}
 			Format = ChatSettings.getRelevantFormatGroup(player).getTOWN();
-			recipients = new HashSet<Player>(findRecipients(player, TownyUniverse.getOnlinePlayers(town)));
+			recipients = new HashSet<Player>(findRecipients(player.getName(), TownyUniverse.getOnlinePlayers(town)));
 			recipients = checkSpying(recipients);
 			break;
 		
@@ -86,23 +87,23 @@ public class StandardChannel extends Channel {
 				return;
 			}
 			Format = ChatSettings.getRelevantFormatGroup(player).getNATION();
-			recipients = new HashSet<Player>(findRecipients(player, TownyUniverse.getOnlinePlayers(nation)));
+			recipients = new HashSet<Player>(findRecipients(player.getName(), TownyUniverse.getOnlinePlayers(nation)));
 			recipients = checkSpying(recipients);
 			break;
 			
 		case DEFAULT:
 			Format = ChatSettings.getRelevantFormatGroup(player).getDEFAULT();
-			recipients = new HashSet<Player>(findRecipients(player, new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
+			recipients = new HashSet<Player>(findRecipients(player.getName(), new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
 			break;
 			
 		case GLOBAL:
 			Format = ChatSettings.getRelevantFormatGroup(player).getGLOBAL();
-			recipients = new HashSet<Player>(findRecipients(player, new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
+			recipients = new HashSet<Player>(findRecipients(player.getName(), new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
 			break;
 			
 		case PRIVATE:
 			Format = ChatSettings.getRelevantFormatGroup(player).getGLOBAL();
-			recipients = new HashSet<Player>(findRecipients(player, new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
+			recipients = new HashSet<Player>(findRecipients(player.getName(), new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
 			break;
 		}
 		
@@ -170,8 +171,9 @@ public class StandardChannel extends Channel {
         
         // Relay to IRC
         CraftIRCHandler ircHander = plugin.getIRC();
-        if (ircHander != null)
+        if (ircHander != null) {
         	ircHander.IRCSender(msg, getCraftIRCTag());
+        }
 		
 	}
 
@@ -189,7 +191,7 @@ public class StandardChannel extends Channel {
 	private boolean testDistance(Player player1, Player player2, double range) {
 		
 		// unlimited range (all worlds)
-		if (range == -1)
+		if (range == -1 || player1 == null) 
 			return true;
 		
 		// Same world only
@@ -210,11 +212,11 @@ public class StandardChannel extends Channel {
 	 * @param list
 	 * @return Set containing a list of players for this message.
 	 */
-	private Set<Player> findRecipients(Player sender, List<Player> list) {
+	private Set<Player> findRecipients(String sendersName, List<Player> list) {
 		
 		Set<Player> recipients = new HashSet<Player>();
 		Boolean bEssentials = plugin.getTowny().isEssentials();
-		String sendersName = sender.getName();
+		
 		
 		// Compile the list of recipients
         for (Player test : list) {
@@ -228,8 +230,9 @@ public class StandardChannel extends Channel {
         		 * If the player is within range for this channel
         		 * or the recipient has the spy mode.
         		 */
-	        	if ((testDistance(sender, test, getRange())) || (plugin.getTowny().hasPlayerMode(test, "spy"))) {
-	        		
+        		Player p = plugin.getServer().getPlayer(sendersName);
+        		
+	        	if ((p == null || !p.isOnline()) || (testDistance(p, test, getRange())) || (plugin.getTowny().hasPlayerMode(test, "spy"))) {
 	        		if (bEssentials) {
 						try {
 							User targetUser = plugin.getTowny().getEssentials().getUser(test);
@@ -281,6 +284,69 @@ public class StandardChannel extends Channel {
         }
 		
 		return recipients;
+	}
+
+	@Override
+	public void handleIRCChat(RelayedMessage ircmsg) {
+		if (ircmsg.getField("realSender").startsWith("_")) {
+			ircmsg.setField("realSender", ircmsg.getField("realSender").substring(1));
+			ircmsg.setField("sender", ircmsg.getField("sender").substring(1));
+		}
+		if (ircmsg.getField("realSender") != null) {
+			try {
+				if (plugin.getTowny().getEssentials().getOfflineUser(ircmsg.getField("realSender")).isMuted()) {
+					return;
+				}
+			} catch (NullPointerException ex) {
+			} catch (TownyException ex) {
+			}
+			Resident resident = null;
+			Set<Player> recipients = null;
+			try {
+				resident = TownyUniverse.getDataSource().getResident(ircmsg.getField("realSender"));
+			} catch (NotRegisteredException e) {
+			}
+			channelTypes exec = channelTypes.valueOf(getType().name());
+			
+			String fmt = null;
+			switch(exec) {
+			case TOWN:
+				fmt = "[IRC]" + ChatSettings.getFormatGroup("channel_formats").getTOWN();
+				break;
+			case NATION:
+				fmt = "[IRC]" + ChatSettings.getFormatGroup("channel_formats").getNATION();
+				break;
+			case PRIVATE:
+			case GLOBAL:
+				fmt = "[IRC]" + ChatSettings.getFormatGroup("channel_formats").getGLOBAL();
+				break;
+			default:
+				fmt = "[IRC]" + ChatSettings.getFormatGroup("channel_formats").getDEFAULT();
+			}
+			fmt = fmt.replace("{worldname}","").replace("{group}","")
+					 .replace("{playername}",ircmsg.getField("realSender"))
+					 .replace("{msgcolour}", getMessageColour())
+					 .replace("{channelTag}", "");
+			net.milkbowl.vault.chat.Chat vaultChat = plugin.getVaultChat();
+			if (vaultChat != null) {
+				fmt = fmt.replace("{permprefix}", vaultChat.getPlayerPrefix(plugin.getServer().getWorlds().get(0).getName(), ircmsg.getField("realSender")))
+						 .replace("{permsuffix}", vaultChat.getPlayerSuffix(plugin.getServer().getWorlds().get(0).getName(), ircmsg.getField("realSender")));
+			}
+			LocalTownyChatEvent tcev = new LocalTownyChatEvent(ircmsg, resident);
+			tcev.setFormat(fmt);
+			if (plugin.getTowny() != null) {
+				
+			}
+			fmt = TownyChatFormatter.getChatFormat(tcev);
+			
+			recipients = new HashSet<Player>(findRecipients(ircmsg.getField("realSender"), new ArrayList<Player>(Arrays.asList(BukkitTools.getOnlinePlayers()))));
+			recipients = checkSpying(recipients);
+	        String msg = fmt.replace("%1$s", ircmsg.getField("realSender")).replace("%2$s", ircmsg.getMessage());
+	        for (Player p: recipients) {
+	        	p.sendMessage(msg);
+	        }
+		}
+		
 	}
 
 }
