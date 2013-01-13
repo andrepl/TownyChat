@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import com.ensifera.animosity.craftirc.RelayedMessage;
+
 public abstract class Channel {
 	
 	private String name;
@@ -124,6 +126,7 @@ public abstract class Channel {
 	 * @param event the event to process
 	 */
 	public abstract void chatProcess(AsyncPlayerChatEvent event);
+	public abstract void handleIRCChat(RelayedMessage ircmsg);
 	
 	/*
 	 * Used to reset channel settings for a given player

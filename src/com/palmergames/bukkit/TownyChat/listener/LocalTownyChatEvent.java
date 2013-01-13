@@ -2,15 +2,24 @@ package com.palmergames.bukkit.TownyChat.listener;
 
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
+import com.ensifera.animosity.craftirc.RelayedMessage;
 import com.palmergames.bukkit.towny.object.Resident;
 
 public class LocalTownyChatEvent {
   private AsyncPlayerChatEvent event;
   private Resident resident;
+  private RelayedMessage rmsg;
+  private String format = null;
   
   public LocalTownyChatEvent(AsyncPlayerChatEvent event, Resident resident) {
     this.event = event;
     this.resident = resident;
+  }
+  
+  public LocalTownyChatEvent(RelayedMessage msg, Resident resident) {
+	  this.event = null;
+	  this.resident = resident;
+	  this.rmsg = msg;
   }
 
   /**
@@ -35,7 +44,10 @@ public class LocalTownyChatEvent {
    * @param format
    */
   public void setFormat(String format) {
-    event.setFormat(format);
+	  this.format = format;
+	  if (event != null) {
+		  event.setFormat(format);
+	  }
   }
   
   /**
@@ -43,7 +55,10 @@ public class LocalTownyChatEvent {
    * @return the chat event's format
    */
   public String getFormat() {
-    return event.getFormat();
+	if (event != null) {
+		return event.getFormat();
+	}
+	return this.format;
   }
   
   /**
@@ -51,6 +66,9 @@ public class LocalTownyChatEvent {
    * @return the chat event's message
    */
   public String getMessage() {
-    return event.getMessage();
+	if (event != null) {
+		return event.getMessage();
+	}
+	return rmsg.getMessage();
   }
 }

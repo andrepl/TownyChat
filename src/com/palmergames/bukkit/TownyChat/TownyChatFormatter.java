@@ -2,6 +2,9 @@ package com.palmergames.bukkit.TownyChat;
 
 import java.util.regex.Pattern;
 
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
+
 import com.palmergames.bukkit.towny.TownyFormatter;
 import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
 import com.palmergames.bukkit.towny.object.Nation;
@@ -147,9 +150,11 @@ public class TownyChatFormatter {
 			}
 		});
 		replacer.registerFormatReplacement(Pattern.quote("{permsuffix}"), new TownyChatReplacerCallable() {
+			
 			@Override
 			public String call(String match, LocalTownyChatEvent event) throws Exception {
 				return TownyUniverse.getPermissionSource().getPrefixSuffix(event.getResident(), "suffix");
+				
 			}
 		});
 

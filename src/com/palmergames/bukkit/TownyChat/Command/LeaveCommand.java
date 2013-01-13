@@ -26,7 +26,7 @@ public class LeaveCommand implements CommandExecutor {
 		// If not our command
 		if ((!label.equalsIgnoreCase("leave") || args.length != 1) && 
 			(!label.equalsIgnoreCase("ch") || args.length != 2 || !args[0].equalsIgnoreCase("leave"))) {
-			TownyMessaging.sendErrorMsg(sender, "[TownyChat] Error: Invalid command!");
+			TownyMessaging.sendErrorMsg(sender, "Error: Invalid command!");
 			return false;
 		}
 			
@@ -61,7 +61,7 @@ public class LeaveCommand implements CommandExecutor {
 		}
 		
 		if (chan == null) {
-			TownyMessaging.sendErrorMsg(sender, "[TownyChat] There is no channel called " + Colors.White + name);
+			TownyMessaging.sendErrorMsg(sender, "There is no channel called " + Colors.White + name);
 			return true;
 		}
 
@@ -73,18 +73,18 @@ public class LeaveCommand implements CommandExecutor {
 		if ( leavePerm == null || 
 		   ( leavePerm != null && ( !plugin.getTowny().isPermissions() || 
 								  ( plugin.getTowny().isPermissions() && !TownyUniverse.getPermissionSource().has( player, leavePerm ) )))) {
-			TownyMessaging.sendErrorMsg(sender, "[TownyChat] You cannot leave " + Colors.White + chan.getName());
+			TownyMessaging.sendErrorMsg(sender, "You cannot leave " + Colors.White + chan.getName());
 			return true;
 		}
 
 		// If we fail you weren't in there to start with
 		if (!chan.leave(sender.getName())){
-			TownyMessaging.sendMsg(sender, "[TownyChat] You already left " + Colors.White + chan.getName());
+			TownyMessaging.sendMsg(sender, "You already left " + Colors.White + chan.getName());
 			return true;
 		}
 					
 		// Announce it
-		TownyMessaging.sendMsg(sender, "[TownyChat] You left " + Colors.White + chan.getName());
+		TownyMessaging.sendMsg(sender, "You left " + Colors.White + chan.getName());
 
 		// Find what the next channel is if any
 		Channel nextChannel = null;

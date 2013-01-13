@@ -24,7 +24,7 @@ public class JoinCommand implements CommandExecutor {
 		// If not our command
 		if ((!label.equalsIgnoreCase("join") || args.length != 1) && 
 			(!label.equalsIgnoreCase("ch") || args.length != 2 || !args[0].equalsIgnoreCase("join"))) {
-			TownyMessaging.sendErrorMsg(sender, "[TownyChat] Error: Invalid command!");
+			TownyMessaging.sendErrorMsg(sender, "Error: Invalid command!");
 			return false;
 		}
 			
@@ -59,7 +59,7 @@ public class JoinCommand implements CommandExecutor {
 		}
 		
 		if (chan == null) {
-			TownyMessaging.sendErrorMsg(sender, "[TownyChat] There is no channel called " + Colors.White + name);
+			TownyMessaging.sendErrorMsg(sender, "There is no channel called " + Colors.White + name);
 			return true;
 		}
 				
@@ -70,16 +70,16 @@ public class JoinCommand implements CommandExecutor {
 		//     - player has channel permission
 		String joinPerm = chan.getPermission();
 		if ((joinPerm != null && (plugin.getTowny().isPermissions() && !TownyUniverse.getPermissionSource().has(player, joinPerm)))) {
-			TownyMessaging.sendErrorMsg(sender, "[TownyChat] You cannot join " + Colors.White + chan.getName());
+			TownyMessaging.sendErrorMsg(sender, "You cannot join " + Colors.White + chan.getName());
 			return true;
 		}
 	
 		if (!chan.join(sender.getName())){
-			TownyMessaging.sendMsg(sender, "[TownyChat] You are already in " + Colors.White + chan.getName());
+			TownyMessaging.sendMsg(sender, "You are already in " + Colors.White + chan.getName());
 			return true;
 		}
 		
-		TownyMessaging.sendMsg(sender, "[TownyChat] You joined " + Colors.White + chan.getName());
+		TownyMessaging.sendMsg(sender, "You joined " + Colors.White + chan.getName());
 		return true;
 	}
 }
